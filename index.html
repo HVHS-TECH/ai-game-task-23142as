@@ -1,14 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Page Title</title>
+  <meta charset="UTF-8">
+  <title>Snake Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+      color: white;
+    }
+    canvas {
+      background-color: #000;
+      border: 2px solid #00ff00;
+      margin-top: 10px;
+    }
+    #top-panel {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    #score {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    label, select {
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
+  <div id="top-panel">
+    <div id="score">Score: 0</div>
+    <label for="colorPicker">Snake Color:</label>
+    <select id="colorPicker">
+      <option value="#00ff00" selected>Green</option>
+      <option value="#ffcc00">Yellow</option>
+      <option value="#00ccff">Cyan</option>
+      <option value="#ff3399">Pink</option>
+      <option value="#ffffff">White</option>
+    </select>
+  </div>
 
-<h1>This is a Heading</h1>
-<p>This is a paragraph.</p>
+  <canvas id="game" width="400" height="400"></canvas>
 
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score');
+    const colorPicker = document.getElementById('colorPicker');
+
+    const box = 20;
+    const rows = canvas.height / box;
+    const cols = canvas.width / box;
+
+    let score = 0;
+    let direction = 'RIGHT';
+    let snakeColor = colorPicker.value;
+
+    let snake = [
+      { x: 9 * box, y: 10 * box }
+    ];
+
+    let food = spawnFood();
+
+    colorPicker.addEventListener('change', () => {
+      snakeColor = colorPicker.value;
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+      else if (e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+      else if (e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+      else if (e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+    });
+
+    function spawnFood() {
+      let newFood;
+      do {
+        newFood = {
+          x: Math.floor(Math.random() * cols) * box,
+          y: Math.floor(Math.random() * rows) * box
+        };
+      } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+      return newFood;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = (i === 0) ? snakeColor : '#fff';
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      }
+
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(food.x, food.y, box, box);
+
+      const head = { x: snake[0].x, y: snake[0].y };
+
+      if (direction === 'LEFT') head.x -= box;
+      else if (direction === 'UP') head.y -= box;
+      else if (direction === 'RIGHT') head.x += box;
+      else if (direction === 'DOWN') head.y += box;
+
+      // Wall or self collision = game over
+      if (
+        head.x < 0 || head.x >= canvas.width ||
+        head.y < 0 || head.y >= canvas.height ||
+        snake.some(segment => segment.x === head.x && segment.y === head.y)
+      ) {
+        clearInterval(game);
+        alert('Game Over! Your score: ' + score);
+        location.reload();
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        scoreDisplay.innerText = 'Score: ' + score;
+        food = spawnFood();
+      } else {
+        snake.pop();
+      }
+    }
+
+    const game = setInterval(draw, 100);
+  </script>
 </body>
 </html>
-
-
